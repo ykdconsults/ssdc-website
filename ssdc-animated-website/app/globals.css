@@ -9,6 +9,16 @@
   --page-muted: #5e564c;
   --page-panel: rgba(255, 255, 255, 0.52);
   --page-line: rgba(22, 20, 16, 0.09);
+  --ssdc-green: #0b843f;
+  --ssdc-green-dark: #086a32;
+  --ssdc-green-line: rgba(11, 132, 63, 0.22);
+  --ssdc-green-wash: rgba(11, 132, 63, 0.08);
+  --ssdc-blue: #132a6b;
+  --ssdc-gold: #d7853f;
+  --ssdc-gold-dark: #b46a2d;
+  --ssdc-gold-line: rgba(215, 133, 63, 0.28);
+  --ssdc-gold-wash: rgba(215, 133, 63, 0.14);
+  --ssdc-gold-text: #9d5e2b;
 }
 
 * {
@@ -26,16 +36,6 @@ body {
   color: var(--page-ink);
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
-}
-
-@media (pointer: fine) {
-  body,
-  a,
-  button,
-  input,
-  textarea {
-    cursor: none;
-  }
 }
 
 a {

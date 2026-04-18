@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, MapPinned, Menu, MoveRight, Sparkles, Waves, X } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MapPinned, Menu, MoveRight, Sparkles, Waves, X } from 'lucide-react';
 
 type NavItem = {
   label: string;
@@ -134,11 +134,125 @@ const storyRail: StoryRailCard[] = [
 ];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 36 },
+  hidden: { opacity: 0, x: -42, y: 0 },
+  show: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const scrollReveal = {
+  hidden: { opacity: 0, y: 34, rotate: -9, scale: 0.92 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    rotate: 0,
+    scale: 1,
+    transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const slideReveal = {
+  hidden: { opacity: 0, x: -96, y: 0, rotate: 0, scale: 1 },
+  show: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    rotate: 0,
+    scale: 1,
+    transition: { duration: 0.68, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const cardRevealVariants = [
+  {
+    hidden: { opacity: 0, x: -84, rotate: -10, scale: 0.9 },
+    show: {
+      opacity: 1,
+      x: 0,
+      rotate: 0,
+      scale: 1,
+      transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    hidden: { opacity: 0, y: 60, rotateX: -18, scale: 0.86 },
+    show: {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      scale: 1,
+      transition: { duration: 0.76, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    hidden: { opacity: 0, x: 76, rotateY: 20, scale: 0.96 },
+    show: {
+      opacity: 1,
+      x: 0,
+      rotateY: 0,
+      scale: 1,
+      transition: { duration: 0.74, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    hidden: { opacity: 0, y: -42, scale: 1.1, rotate: 6 },
+    show: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      rotate: 0,
+      transition: { duration: 0.78, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    hidden: { opacity: 0, x: -28, y: 52, rotate: -14, scale: 0.88 },
+    show: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      rotate: 0,
+      scale: 1,
+      transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  {
+    hidden: { opacity: 0, x: 40, y: 20, rotate: 10, scale: 0.94 },
+    show: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      rotate: 0,
+      scale: 1,
+      transition: { duration: 0.73, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+];
+
+const getCardReveal = (seed: number) => cardRevealVariants[Math.abs(seed) % cardRevealVariants.length];
+
+const revealViewport = { once: false, amount: 0.2 };
+const revealViewportWide = { once: false, amount: 0.4 };
+
+const cascadeContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.18,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const cascadeItem = {
+  hidden: { opacity: 0, x: -32, y: 0 },
+  show: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
@@ -148,10 +262,10 @@ function Preloader() {
       initial={{ opacity: 1 }}
       animate={{ opacity: 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.7, delay: 1.5, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed inset-0 z-[120] overflow-hidden bg-[#12100d]"
+      transition={{ duration: 0.7, delay: 2.3, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-0 z-[120] overflow-hidden bg-[var(--ssdc-green)]"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(204,163,96,0.18),transparent_26%),radial-gradient(circle_at_80%_30%,rgba(44,93,77,0.2),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(241,209,115,0.18),transparent_26%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.08),transparent_24%)]" />
       <motion.div
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
@@ -160,10 +274,23 @@ function Preloader() {
       />
       <div className="relative flex h-full flex-col items-center justify-center px-6 text-center text-[#f3eadf]">
         <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 18 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-8"
+        >
+          <LogoAsset
+            src="/ssdc-logo-3.png"
+            alt="South-South Development Commission emblem"
+            className="h-auto w-[130px] max-w-full md:w-[170px]"
+            fallback={<SSDCLogo />}
+          />
+        </motion.div>
+        <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="text-[11px] uppercase tracking-[0.65em] text-[#ccb997]"
+          className="text-[11px] uppercase tracking-[0.65em] text-[var(--ssdc-gold)]"
         >
           South-South Development Commission
         </motion.div>
@@ -190,7 +317,7 @@ function SSDCLogo({ compact = false }: { compact?: boolean }) {
           South South
         </div>
         <div
-          className={`${compact ? 'mt-1 text-[9px] tracking-[0.44em]' : 'mt-2 text-[10px] tracking-[0.62em] md:text-xs'} uppercase text-[#8f836a]`}
+          className={`${compact ? 'mt-1 text-[9px] tracking-[0.44em]' : 'mt-2 text-[10px] tracking-[0.62em] md:text-xs'} uppercase text-[var(--ssdc-gold-text)]`}
         >
           Development Commission
         </div>
@@ -231,87 +358,33 @@ function SSDCMark({ small = false }: { small?: boolean }) {
 
 function SSDCBackgroundLogo() {
   return (
-    <svg
-      width="920"
-      height="420"
-      viewBox="0 0 920 420"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <img
+      src="/ssdc-logo-2.png"
+      alt=""
       aria-hidden="true"
-    >
-      <g fill="#17130f">
-        <path d="M406 26H472V222H406V26Z" />
-        <path d="M480 0H546V222H480V0Z" />
-        <path d="M332 118L404 30V222H332V118Z" />
-        <path d="M554 72L626 144V222H554V72Z" />
-        <path d="M136 222L232 102H332L256 222H136Z" />
-        <path d="M784 222L688 102H588L664 222H784Z" />
-        <path d="M404 30L472 98L406 164V30Z" opacity="0.18" />
-        <path d="M480 72L546 138L480 204V72Z" opacity="0.18" />
-      </g>
-      <text
-        x="460"
-        y="318"
-        textAnchor="middle"
-        fill="#17130f"
-        fontFamily="Trebuchet MS, Segoe UI, sans-serif"
-        fontSize="74"
-        fontWeight="700"
-        letterSpacing="1.5"
-      >
-        SOUTH SOUTH
-      </text>
-      <text
-        x="460"
-        y="374"
-        textAnchor="middle"
-        fill="#17130f"
-        fontFamily="Trebuchet MS, Segoe UI, sans-serif"
-        fontSize="28"
-        fontWeight="700"
-        letterSpacing="13"
-      >
-        DEVELOPMENT COMMISSION
-      </text>
-    </svg>
+      className="h-auto w-[320px] max-w-none xl:w-[420px]"
+    />
   );
 }
 
-function GlassCursor({
-  mouseX,
-  mouseY,
-  active,
+function LogoAsset({
+  src,
+  alt,
+  className,
+  fallback,
 }: {
-  mouseX: number;
-  mouseY: number;
-  active: boolean;
+  src: string;
+  alt: string;
+  className: string;
+  fallback: React.ReactNode;
 }) {
-  const cursorVisible = mouseX !== 0 || mouseY !== 0;
+  const [failed, setFailed] = useState(false);
 
-  return (
-    <>
-      <motion.div
-        className="pointer-events-none fixed left-0 top-0 z-[130] hidden h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#1d7b69]/65 bg-[rgba(22,106,88,0.26)] shadow-[0_8px_26px_rgba(22,106,88,0.2)] backdrop-blur-md lg:block"
-        animate={{
-          x: typeof window === 'undefined' ? -100 : window.innerWidth / 2 + mouseX * (window.innerWidth / 2),
-          y: typeof window === 'undefined' ? -100 : window.innerHeight / 2 + mouseY * (window.innerHeight / 2),
-          opacity: cursorVisible ? 1 : 0,
-          scale: active ? 2.6 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 220, damping: 28, mass: 0.55 }}
-      />
-      <motion.div
-        className="pointer-events-none fixed left-0 top-0 z-[131] hidden h-[0.34rem] w-[0.34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d77a63] shadow-[0_0_16px_rgba(215,122,99,0.7)] lg:block"
-        animate={{
-          x: typeof window === 'undefined' ? -100 : window.innerWidth / 2 + mouseX * (window.innerWidth / 2),
-          y: typeof window === 'undefined' ? -100 : window.innerHeight / 2 + mouseY * (window.innerHeight / 2),
-          opacity: cursorVisible ? 1 : 0,
-          scale: active ? 1.8 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.4 }}
-      />
-    </>
-  );
+  if (failed) {
+    return <>{fallback}</>;
+  }
+
+  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
 }
 
 function SectionIntro({
@@ -320,25 +393,31 @@ function SectionIntro({
   body,
   invert = false,
   shift = 0,
+  timed = false,
+  duration = 0.8,
 }: {
   label: string;
   title: string;
   body: string;
   invert?: boolean;
   shift?: number;
+  timed?: boolean;
+  duration?: number;
 }) {
   return (
     <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.2 }}
+      variants={timed ? undefined : fadeUp}
+      initial={timed ? { opacity: 0, y: 36 } : 'hidden'}
+      animate={timed ? { opacity: 1, y: 0 } : undefined}
+      whileInView={timed ? undefined : 'show'}
+      viewport={timed ? undefined : revealViewport}
+      transition={timed ? { duration, ease: [0.22, 1, 0.36, 1] } : undefined}
       className="max-w-3xl"
       style={{ transform: `translateY(${shift}px)` }}
     >
       <div
         className={`mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] uppercase tracking-[0.32em] ${
-          invert ? 'border-white/15 text-[#d8cfbf]' : 'border-[#1f1d19]/10 text-[#6c6559]'
+          invert ? 'border-white/15 text-[#f3d787]' : 'border-[color:var(--ssdc-gold-line)] text-[var(--ssdc-gold-text)]'
         }`}
       >
         <Sparkles className="h-3.5 w-3.5" />
@@ -350,6 +429,39 @@ function SectionIntro({
       <p className={`mt-5 max-w-2xl text-sm leading-8 md:text-base ${invert ? 'text-[#d0c6b8]' : 'text-[#5f584d]'}`}>
         {body}
       </p>
+    </motion.div>
+  );
+}
+
+function SectionBackdropTitle({
+  text,
+  scrollY,
+  speed,
+  invert = false,
+  align = 'left',
+}: {
+  text: string;
+  scrollY: number;
+  speed: number;
+  invert?: boolean;
+  align?: 'left' | 'right';
+}) {
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+      animate={{ y: scrollY * speed }}
+      transition={{ type: 'spring', stiffness: 32, damping: 22, mass: 1.05 }}
+    >
+      <div className={`mx-auto flex h-full max-w-7xl px-5 md:px-8 lg:px-10 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
+        <div
+          className={`max-w-[10ch] whitespace-normal text-[3.8rem] font-semibold uppercase leading-[0.8] tracking-[-0.08em] md:text-[6.5rem] lg:text-[8.5rem] ${
+            invert ? 'text-white/[0.08]' : 'text-black/[0.06]'
+          }`}
+        >
+          {text}
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -370,7 +482,7 @@ function ParallaxImage({
   className?: string;
 }) {
   return (
-    <div className={`overflow-hidden rounded-[2rem] border border-black/10 bg-[#d7cfbf] ${className ?? ''}`}>
+    <div className={`overflow-hidden rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-[#d7cfbf] ${className ?? ''}`}>
       <motion.img
         src={src}
         alt={alt}
@@ -392,37 +504,58 @@ export default function HomePage() {
   const [scrollY, setScrollY] = useState(0);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [activeMetric, setActiveMetric] = useState(0);
-  const [cursorActive, setCursorActive] = useState(false);
+  const [storyRailIndex, setStoryRailIndex] = useState(0);
+  const [navTheme, setNavTheme] = useState<'home' | 'light' | 'white'>('home');
+  const headerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const loaderTimer = window.setTimeout(() => setLoading(false), 2200);
-    const onScroll = () => setScrollY(window.scrollY);
-    const onMove = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const interactiveTarget = target?.closest('a, button, input, textarea, select, [data-cursor-hover="true"]');
+    const loaderTimer = window.setTimeout(() => setLoading(false), 3000);
+    let frameId = 0;
+    const updateNavTheme = () => {
+      const headerHeight = headerRef.current?.offsetHeight ?? 88;
+      const sampleX = window.innerWidth / 2;
+      const sampleY = Math.min(headerHeight + 14, window.innerHeight - 1);
+      const sampledElements = document.elementsFromPoint(sampleX, sampleY);
+      const themedElement = sampledElements.find(
+        (element): element is HTMLElement => element instanceof HTMLElement && Boolean(element.dataset.navTheme),
+      );
+      const nextTheme = themedElement?.dataset.navTheme === 'white'
+        ? 'white'
+        : themedElement?.dataset.navTheme === 'home'
+          ? 'home'
+          : 'light';
 
+      setNavTheme((current) => (current === nextTheme ? current : nextTheme));
+    };
+    const onScroll = () => {
+      setScrollY(window.scrollY);
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(updateNavTheme);
+    };
+    const onMove = (event: MouseEvent) => {
       setPointer({
         x: (event.clientX / window.innerWidth - 0.5) * 2,
         y: (event.clientY / window.innerHeight - 0.5) * 2,
       });
-      setCursorActive(Boolean(interactiveTarget));
     };
-    const onLeave = () => setCursorActive(false);
+    const onResize = () => updateNavTheme();
 
     const timer = window.setInterval(() => {
       setActiveMetric((current) => (current + 1) % stats.length);
     }, 2400);
 
+    updateNavTheme();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseleave', onLeave);
+    window.addEventListener('resize', onResize);
 
     return () => {
       window.clearTimeout(loaderTimer);
       window.clearInterval(timer);
+      window.cancelAnimationFrame(frameId);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseleave', onLeave);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 
@@ -433,11 +566,27 @@ export default function HomePage() {
   const sectionShift = Math.max(scrollY * -0.004, -8);
   const softImageShift = Math.max(scrollY * -0.008, -14);
   const lighterImageShift = Math.max(scrollY * -0.006, -10);
+  const storyRailMaxIndex = Math.max(storyRail.length - 1, 0);
+  const storyRailStep = 444;
+  const headerThemeClass =
+    navTheme === 'home'
+      ? 'border-white/10 bg-[rgba(20,18,15,0.48)] shadow-[0_18px_44px_rgba(16,13,10,0.24)]'
+      : navTheme === 'white'
+        ? 'border-white/65 bg-[rgba(255,255,255,0.86)] shadow-[0_18px_40px_rgba(20,18,15,0.12)]'
+        : 'border-[color:var(--ssdc-gold-line)] bg-[rgba(243,237,226,0.74)] shadow-[0_18px_40px_rgba(20,18,15,0.08)]';
+  const navLinkClass = navTheme === 'home'
+    ? 'inline-flex origin-center text-[#f7f2e8] hover:scale-110 hover:text-white'
+    : 'inline-flex origin-center text-[#454038] hover:scale-110 hover:text-black';
+  const mobileMenuPanelClass = navTheme === 'home' ? 'border-t border-white/10 bg-[rgba(20,18,15,0.6)]' : 'border-t border-[color:var(--ssdc-gold-line)] bg-[rgba(243,237,226,0.92)]';
+  const mobileMenuItemClass = navTheme === 'home' ? 'bg-white/10 text-[#f7f2e8]' : 'bg-[var(--ssdc-gold-wash)] text-[#1d1a16]';
+  const mobileToggleClass =
+    navTheme === 'home'
+      ? 'border-white/20 text-white bg-white/5'
+      : 'border-[color:var(--ssdc-green-line)] text-[var(--ssdc-green)]';
 
   return (
     <div className="min-h-screen overflow-x-clip bg-[#f3ede2] text-[#161410]">
       <AnimatePresence>{loading ? <Preloader /> : null}</AnimatePresence>
-      <GlassCursor mouseX={mouseX} mouseY={mouseY} active={cursorActive} />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(215,173,111,0.18),transparent_26%),radial-gradient(circle_at_80%_16%,rgba(47,95,78,0.16),transparent_20%),linear-gradient(180deg,#f3ede2_0%,#f6f1e9_42%,#ede4d6_100%)]" />
       <motion.div
         className="pointer-events-none fixed left-1/2 top-[16%] z-0 hidden -translate-x-1/2 opacity-20 lg:block"
@@ -447,19 +596,20 @@ export default function HomePage() {
         <SSDCBackgroundLogo />
       </motion.div>
 
-      <header className="sticky top-0 z-50 border-b border-black/5 bg-[#f3ede2]/88 backdrop-blur-xl">
+      <header ref={headerRef} className={`sticky top-0 z-50 border-b backdrop-blur-2xl ${headerThemeClass}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-8 lg:px-10">
           <a href="#top" className="flex items-center gap-3">
-            <SSDCMark small />
-            <div>
-              <div className="text-xs uppercase tracking-[0.42em] text-[#6d665a]">South-South Development Commission</div>
-              <div className="text-lg leading-none text-[#171511]">Federal agency for regional growth</div>
-            </div>
+            <LogoAsset
+              src="/ssdc-logo-1.png"
+              alt="South-South Development Commission Nigeria logo"
+              className="h-14 w-auto shrink-0 md:h-16"
+              fallback={<SSDCMark small />}
+            />
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm text-[#454038] lg:flex">
+          <nav className="hidden items-center gap-8 text-sm lg:flex">
             {navItems.map((item) => (
-              <a key={item.href} href={item.href} className="transition hover:text-black">
+              <a key={item.href} href={item.href} className={`transition duration-200 ${navLinkClass}`}>
                 {item.label}
               </a>
             ))}
@@ -468,7 +618,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <a
               href="#contact"
-              className="hidden rounded-full bg-[#161410] px-5 py-3 text-sm text-[#f5efe4] transition hover:bg-[#2b2722] md:inline-flex"
+              className="hidden rounded-full bg-[var(--ssdc-green)] px-5 py-3 text-sm text-[#f5efe4] transition hover:bg-[var(--ssdc-green-dark)] md:inline-flex"
             >
               Contact SSDC
             </a>
@@ -476,7 +626,7 @@ export default function HomePage() {
               type="button"
               aria-label="Toggle menu"
               onClick={() => setMenuOpen((current) => !current)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 text-[#161410] lg:hidden"
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border lg:hidden ${mobileToggleClass}`}
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -489,7 +639,7 @@ export default function HomePage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden border-t border-black/5 lg:hidden"
+              className={`overflow-hidden lg:hidden ${mobileMenuPanelClass}`}
             >
               <div className="mx-auto grid max-w-7xl gap-2 px-5 py-4 md:px-8">
                 {navItems.map((item) => (
@@ -497,7 +647,7 @@ export default function HomePage() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    className="rounded-[1.25rem] bg-white/55 px-4 py-3 text-sm text-[#1d1a16]"
+                    className={`rounded-[1.25rem] px-4 py-3 text-sm ${mobileMenuItemClass}`}
                   >
                     {item.label}
                   </a>
@@ -509,10 +659,10 @@ export default function HomePage() {
       </header>
 
       <main id="top">
-        <section className="relative px-5 pb-12 pt-10 md:px-8 lg:px-10 lg:pb-20 lg:pt-14">
+        <section data-nav-theme="home" className="relative px-5 pb-12 pt-10 md:px-8 lg:px-10 lg:pb-20 lg:pt-14">
           <div className="pointer-events-none absolute inset-0 -z-[1]">
             <motion.div
-              className="absolute left-[4%] top-[8%] h-48 w-48 rounded-full border border-black/10"
+              className="absolute left-[4%] top-[8%] h-48 w-48 rounded-full border border-[color:var(--ssdc-gold-line)]"
               animate={{ x: mouseX * 24, y: mouseY * 24 + scrollY * 0.03 }}
               transition={{ type: 'spring', stiffness: 50, damping: 18 }}
             />
@@ -526,15 +676,21 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
             <motion.div
               initial="hidden"
-              animate="show"
+              whileInView="show"
+              viewport={revealViewport}
               variants={fadeUp}
               className="pt-8 lg:pt-14"
               style={{ transform: `translate3d(${mouseX * 4}px, ${titleShift + mouseY * 2}px, 0)` }}
             >
               <div className="mb-7">
-                <SSDCLogo />
+                <LogoAsset
+                  src="/ssdc-logo-2.png"
+                  alt="South-South Development Commission emblem"
+                  className="h-auto w-[180px] max-w-full md:w-[240px]"
+                  fallback={<SSDCLogo />}
+                />
               </div>
-              <div className="inline-flex rounded-full border border-black/10 bg-white/55 px-4 py-2 text-[11px] uppercase tracking-[0.34em] text-white mix-blend-difference">
+              <div className="inline-flex rounded-full border border-[color:var(--ssdc-gold-line)] bg-[var(--ssdc-gold)] px-4 py-2 text-[11px] uppercase tracking-[0.34em] text-[#161410]">
                 Established in 2025 for the South-South region
               </div>
               <h1 className="mt-6 max-w-5xl text-[3.25rem] leading-[0.92] text-white mix-blend-difference md:text-[5.35rem] lg:text-[6.3rem]">
@@ -547,20 +703,28 @@ export default function HomePage() {
               </p>
 
               <div className="mt-10 flex flex-wrap items-center gap-4">
-                <a
+                <motion.a
                   href="#priorities"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#171410] px-6 py-3 text-sm text-[#f5efe4] transition hover:bg-[#2c2822]"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={scrollReveal}
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--ssdc-green)] px-6 py-3 text-sm text-[#f5efe4] transition hover:bg-[var(--ssdc-green-dark)]"
                 >
                   Explore priorities
                   <ArrowRight className="h-4 w-4" />
-                </a>
-                <a
+                </motion.a>
+                <motion.a
                   href="#leadership"
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 px-6 py-3 text-sm text-[#1c1915] transition hover:bg-white/50"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={scrollReveal}
+                  className="inline-flex items-center gap-2 rounded-full border border-[color:var(--ssdc-gold-line)] px-6 py-3 text-sm text-[var(--ssdc-gold-text)] transition hover:bg-[var(--ssdc-gold-wash)]"
                 >
                   Leadership and mandate
                   <MoveRight className="h-4 w-4" />
-                </a>
+                </motion.a>
               </div>
 
               <div className="mt-10 grid max-w-2xl gap-5 sm:grid-cols-3">
@@ -568,12 +732,16 @@ export default function HomePage() {
                   ['Transportation', 'Roads, rail, and waterways'],
                   ['Energy', 'Power infrastructure and access'],
                   ['Agriculture', 'Rural growth and food systems'],
-                ].map(([title, body]) => (
+                ].map(([title, body], index) => (
                   <motion.div
                     key={title}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={revealViewport}
+                    variants={getCardReveal(index)}
                     whileHover={{ scale: 1.35, zIndex: 30 }}
                     transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative rounded-[1.5rem] border border-black/10 bg-white/60 p-4 shadow-[0_20px_60px_rgba(27,22,16,0.08)]"
+                    className="relative rounded-[1.5rem] border border-[color:var(--ssdc-green-line)] bg-white/60 p-4 shadow-[0_20px_60px_rgba(27,22,16,0.08)]"
                   >
                     <div className="text-lg text-[#161410]">{title}</div>
                     <div className="mt-2 text-sm leading-7 text-[#5e564b]">{body}</div>
@@ -617,22 +785,23 @@ export default function HomePage() {
 
                 <motion.div
                   key={activeMetric}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="flex min-h-[218px] flex-col justify-between rounded-[2rem] bg-[#161410] p-6 text-[#f4ece1]"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={scrollReveal}
+                  className="flex min-h-[218px] flex-col justify-between rounded-[2rem] bg-[var(--ssdc-green)] p-6 text-[#f4ece1]"
                   style={{
                     transform: `perspective(1200px) rotateX(${mouseY * -6}deg) rotateY(${mouseX * 6}deg) translateY(${scrollY * -0.015}px)`,
                   }}
                 >
-                  <div className="text-xs uppercase tracking-[0.36em] text-[#b9ad99]">Institutional marker</div>
+                  <div className="text-xs uppercase tracking-[0.36em] text-[#f1d173]">Institutional marker</div>
                   <div>
                     <div className="text-6xl leading-none">{stats[activeMetric].value}</div>
-                    <div className="mt-3 text-sm uppercase tracking-[0.34em] text-[#d8cbb8]">
+                    <div className="mt-3 text-sm uppercase tracking-[0.34em] text-[#f5e1a3]">
                       {stats[activeMetric].label}
                     </div>
                   </div>
-                  <p className="max-w-xs text-sm leading-7 text-[#cfc3b2]">
+                  <p className="max-w-xs text-sm leading-7 text-[#f6e9c3]">
                     The refreshed homepage now foregrounds the commission&apos;s legal basis, launch timeline, regional
                     scope, and development agenda.
                   </p>
@@ -642,20 +811,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="border-y border-black/6 bg-[#161410] px-5 py-5 text-[#f0e7da] md:px-8 lg:px-10">
+        <section data-nav-theme="white" className="border-y border-black/6 bg-[var(--ssdc-blue)] px-5 py-5 text-[#f0e7da] md:px-8 lg:px-10">
           <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-4">
             {stats.map((item, index) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
+                initial="hidden"
+                whileInView="show"
+                viewport={revealViewportWide}
+                variants={getCardReveal(index + 10)}
                 transition={{ duration: 0.6, delay: index * 0.08 }}
                 whileHover={{ scale: 1.35, zIndex: 30 }}
                 className="relative flex items-center justify-between rounded-[1.6rem] border border-white/8 px-4 py-4"
               >
                 <span className="text-3xl">{item.value}</span>
-                <span className="max-w-[10rem] text-right text-[11px] uppercase tracking-[0.28em] text-[#cdbfa8]">
+                <span className="max-w-[10rem] text-right text-[11px] uppercase tracking-[0.28em] text-[#f1d78e]">
                   {item.label}
                 </span>
               </motion.div>
@@ -663,30 +833,31 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="relative overflow-visible bg-[#d9ccb7] py-20 text-[#17130f]">
-          <div className="mx-auto flex max-w-7xl items-start justify-between gap-8 px-5 md:px-8 lg:px-10">
-            <div className="max-w-xl">
-              <div className="text-[11px] uppercase tracking-[0.42em] text-[#6c6356]">Story rail</div>
+        <section className="relative overflow-x-hidden overflow-y-visible bg-[#d9ccb7] py-20 text-[#17130f]">
+          <SectionBackdropTitle text="Story Rail" scrollY={scrollY} speed={-0.025} align="right" />
+          <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-6 px-5 md:px-8 lg:flex-row lg:items-start lg:justify-between lg:gap-8 lg:px-10">
+            <motion.div initial="hidden" whileInView="show" viewport={revealViewport} variants={fadeUp} className="max-w-xl">
+              <div className="text-[11px] uppercase tracking-[0.42em] text-[var(--ssdc-gold-text)]">Story rail</div>
               <h2 className="mt-3 text-3xl leading-tight md:text-5xl">
                 A moving mid-page sequence gives the commission a more cinematic presentation.
               </h2>
-            </div>
-            <p className="max-w-md text-sm leading-8 text-[#5b5348]">
+            </motion.div>
+            <motion.p initial="hidden" whileInView="show" viewport={revealViewport} variants={fadeUp} className="max-w-md text-sm leading-8 text-[#5b5348] lg:pt-4">
               This horizontal band is designed to feel like a curated showcase strip, creating more momentum between the hero and the core institutional sections.
-            </p>
+            </motion.p>
           </div>
 
-          <div className="mt-10 overflow-visible py-10">
-            <motion.div
-              className="flex w-max gap-6 px-8 md:px-12 lg:px-16"
-              style={{ x: -Math.min(scrollY * 0.22, 520) }}
-            >
-              {[...storyRail, ...storyRail].map((item, index) => (
+          <div className="relative z-10 mt-10 overflow-x-hidden overflow-y-visible py-10">
+            <div className="grid gap-6 px-5 md:hidden">
+              {storyRail.map((item, index) => (
                 <motion.article
-                  key={`${item.title}-${index}`}
-                  whileHover={{ scale: 1.08, y: -10 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="w-[320px] shrink-0 overflow-visible rounded-[2rem] border border-black/10 bg-[#f5efe5] p-4 shadow-[0_24px_60px_rgba(22,20,16,0.08)] md:w-[420px]"
+                  key={`${item.title}-mobile-${index}`}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={getCardReveal(index + 20)}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  className="w-full overflow-visible rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-[#f5efe5] p-4 shadow-[0_24px_60px_rgba(22,20,16,0.08)]"
                 >
                   <div className="overflow-hidden rounded-[1.4rem]">
                     <motion.img
@@ -701,24 +872,116 @@ export default function HomePage() {
                   <p className="mt-3 text-sm leading-8 text-[#5c5549]">{item.body}</p>
                 </motion.article>
               ))}
-            </motion.div>
+            </div>
+
+            <div className="hidden overflow-x-hidden overflow-y-visible px-8 md:block md:px-12 lg:px-16">
+              <motion.div
+                animate={{ x: -(storyRailIndex * storyRailStep) }}
+                transition={{ type: 'spring', stiffness: 120, damping: 20, mass: 0.9 }}
+                className="flex w-max gap-6"
+              >
+              {storyRail.map((item, index) => (
+                <motion.article
+                  key={`${item.title}-desktop-${index}`}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={index === 0 ? slideReveal : getCardReveal(index + 26)}
+                  whileHover={{ y: -10 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-[420px] shrink-0 overflow-visible rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-[#f5efe5] p-4 shadow-[0_24px_60px_rgba(22,20,16,0.08)]"
+                >
+                  <div className="overflow-hidden rounded-[1.4rem]">
+                    <motion.img
+                      src={item.image}
+                      alt={item.title}
+                      className="h-[220px] w-full object-cover"
+                      animate={{ y: lighterImageShift + mouseY * 8, x: mouseX * 8, scale: 1.05 }}
+                      transition={{ type: 'spring', stiffness: 55, damping: 18 }}
+                    />
+                  </div>
+                  <h3 className="mt-5 text-2xl">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-8 text-[#5c5549]">{item.body}</p>
+                </motion.article>
+              ))}
+              </motion.div>
+            </div>
+
+            <div className="mt-8 hidden justify-center md:flex">
+              <div className="inline-flex items-center gap-4 rounded-full border border-[color:var(--ssdc-green-line)] bg-white/65 px-4 py-3 shadow-[0_18px_40px_rgba(22,20,16,0.08)]">
+                <button
+                  type="button"
+                  onClick={() => setStoryRailIndex((current) => Math.max(current - 1, 0))}
+                  disabled={storyRailIndex === 0}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--ssdc-green-line)] bg-white text-[#17130f] transition hover:bg-[var(--ssdc-green-wash)] disabled:cursor-not-allowed disabled:opacity-35"
+                  aria-label="Previous story rail slide"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {storyRail.map((item, index) => (
+                    <button
+                      key={`${item.title}-dot-${index}`}
+                      type="button"
+                      onClick={() => setStoryRailIndex(index)}
+                      className={`h-2.5 rounded-full transition ${storyRailIndex === index ? 'w-8 bg-[var(--ssdc-green)]' : 'w-2.5 bg-[color:var(--ssdc-green-line)] hover:bg-[var(--ssdc-green)]/60'}`}
+                      aria-label={`Go to story rail slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setStoryRailIndex((current) => Math.min(current + 1, storyRailMaxIndex))}
+                  disabled={storyRailIndex === storyRailMaxIndex}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--ssdc-green-line)] bg-white text-[#17130f] transition hover:bg-[var(--ssdc-green-wash)] disabled:cursor-not-allowed disabled:opacity-35"
+                  aria-label="Next story rail slide"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section id="about" className="px-5 py-20 md:px-8 lg:px-10 lg:py-28">
-          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-            <SectionIntro
-              label="About SSDC"
-              title="A federal commission built to move the South-South from extraction-heavy pressure toward broader prosperity."
-              body="The commission&apos;s public mandate spans socio-economic growth, infrastructure renewal, ecological response, and stronger participation from the communities it serves. That makes this website better suited to a confident institutional tone than a generic brochure style."
-              shift={sectionShift}
-            />
+        <section id="about" className="relative px-5 py-20 md:px-8 lg:px-10 lg:py-28">
+          <SectionBackdropTitle text="About SSDC" scrollY={scrollY} speed={0.03} />
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <motion.div
+              variants={cascadeContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={revealViewport}
+              className="max-w-3xl"
+              style={{ transform: `translateY(${sectionShift}px)` }}
+            >
+              <motion.div
+                variants={cascadeItem}
+                className="mb-5 inline-flex items-center gap-2 rounded-full border border-[color:var(--ssdc-gold-line)] px-4 py-2 text-[11px] uppercase tracking-[0.32em] text-[var(--ssdc-gold-text)]"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                About SSDC
+              </motion.div>
+              <motion.h2
+                variants={cascadeItem}
+                className="max-w-2xl text-4xl leading-[0.94] text-[#161410] md:text-6xl"
+              >
+                A federal commission built to move the South-South from extraction-heavy pressure toward broader prosperity.
+              </motion.h2>
+              <motion.p
+                variants={cascadeItem}
+                className="mt-5 max-w-2xl text-sm leading-8 text-[#5f584d] md:text-base"
+              >
+                The commission&apos;s public mandate spans socio-economic growth, infrastructure renewal, ecological response, and stronger participation from the communities it serves. That makes this website better suited to a confident institutional tone than a generic brochure style.
+              </motion.p>
+            </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              variants={cascadeContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={revealViewport}
               className="grid gap-5 md:grid-cols-2"
             >
               {[
@@ -738,14 +1001,15 @@ export default function HomePage() {
                   'Sectoral scope',
                   'Transportation, energy, agriculture, health, housing, industry, telecommunications, and related public-interest systems.',
                 ],
-              ].map(([title, body]) => (
+              ].map(([title, body], index) => (
                 <motion.div
                   key={title}
+                  variants={getCardReveal(index + 34)}
                   whileHover={{ scale: 1.35, zIndex: 30 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative rounded-[2rem] border border-black/10 bg-white/50 p-6 shadow-[0_16px_40px_rgba(22,20,16,0.06)]"
+                  className="relative rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-white/50 p-6 shadow-[0_16px_40px_rgba(22,20,16,0.06)]"
                 >
-                  <div className="text-xs uppercase tracking-[0.32em] text-[#6a6357]">{title}</div>
+                  <div className="text-xs uppercase tracking-[0.32em] text-[var(--ssdc-gold-text)]">{title}</div>
                   <p className="mt-4 text-sm leading-8 text-[#544e45]">{body}</p>
                 </motion.div>
               ))}
@@ -753,8 +1017,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="priorities" className="bg-[#ece3d4] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+        <section id="priorities" className="relative bg-[#ece3d4] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
+          <SectionBackdropTitle text="Priority Agenda" scrollY={scrollY} speed={-0.035} align="right" />
+          <div className="relative z-10 mx-auto max-w-7xl">
             <SectionIntro
               label="Priority agenda"
               title="Transportation, energy, agriculture, and wider social infrastructure are now the center of the homepage narrative."
@@ -764,11 +1029,11 @@ export default function HomePage() {
 
             <div className="mt-14 grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
               <motion.div
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden rounded-[2rem] border border-black/10 bg-[#d4cab9]"
+                initial="hidden"
+                whileInView="show"
+                viewport={revealViewport}
+                variants={getCardReveal(40)}
+                className="overflow-hidden rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-[#d4cab9]"
               >
                 <motion.img
                   src="https://images.pexels.com/photos/34885737/pexels-photo-34885737.jpeg?auto=compress&cs=tinysrgb&w=1600"
@@ -783,23 +1048,27 @@ export default function HomePage() {
                 {priorities.map((item, index) => (
                   <motion.article
                     key={item.title}
-                    initial={{ opacity: 0, y: 36 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={revealViewport}
+                    variants={getCardReveal(index + 42)}
                     transition={{ duration: 0.75, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
                     whileHover={{ scale: 1.35, zIndex: 30 }}
-                    className="relative rounded-[2rem] border border-black/10 bg-white/55 p-7 shadow-[0_20px_60px_rgba(28,22,14,0.06)]"
-                    style={{
-                      transform: `perspective(1400px) rotateX(${mouseY * -4}deg) rotateY(${mouseX * 5}deg)`,
-                    }}
+                    className="relative rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-white/55 p-7 shadow-[0_20px_60px_rgba(28,22,14,0.06)]"
                   >
-                    <div className="text-xs uppercase tracking-[0.34em] text-[#7c725f]">{item.index}</div>
-                    <h3 className="mt-4 text-3xl leading-tight text-[#181510] md:text-4xl">{item.title}</h3>
-                    <p
-                      className="mt-4 max-w-2xl text-sm leading-8 text-[#5f574b] md:text-base"
+                    <div
+                      style={{
+                        transform: `perspective(1400px) rotateX(${mouseY * -4}deg) rotateY(${mouseX * 5}deg)`,
+                      }}
                     >
-                      {item.body}
-                    </p>
+                      <div className="text-xs uppercase tracking-[0.34em] text-[var(--ssdc-gold-text)]">{item.index}</div>
+                      <h3 className="mt-4 text-3xl leading-tight text-[#181510] md:text-4xl">{item.title}</h3>
+                      <p
+                        className="mt-4 max-w-2xl text-sm leading-8 text-[#5f574b] md:text-base"
+                      >
+                        {item.body}
+                      </p>
+                    </div>
                   </motion.article>
                 ))}
               </div>
@@ -807,8 +1076,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="region" className="bg-[#161410] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+        <section id="region" data-nav-theme="white" className="relative bg-[var(--ssdc-green)] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
+          <SectionBackdropTitle text="Regional Footprint" scrollY={scrollY} speed={0.04} invert align="right" />
+          <div className="relative z-10 mx-auto max-w-7xl">
             <SectionIntro
               label="Regional footprint"
               title="Six states, one connected development story."
@@ -821,9 +1091,10 @@ export default function HomePage() {
               {regionCards.map((item, index) => (
                 <motion.article
                   key={item.state}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={getCardReveal(index + 50)}
                   transition={{ duration: 0.75, delay: index * 0.06 }}
                   whileHover={{ scale: 1.35, zIndex: 30 }}
                   className="relative overflow-visible rounded-[2rem] border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
@@ -839,7 +1110,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.34em] text-[#d7cbb8]">
+                      <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.34em] text-[#f3dfab]">
                         <MapPinned className="h-4 w-4" />
                         {item.state}
                       </div>
@@ -857,8 +1128,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="leadership" className="px-5 py-20 md:px-8 lg:px-10 lg:py-28">
-          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <section id="leadership" className="relative px-5 py-20 md:px-8 lg:px-10 lg:py-28">
+          <SectionBackdropTitle text="Leadership" scrollY={scrollY} speed={-0.028} />
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <SectionIntro
               label="Leadership and mandate"
               title="Built around accountable leadership, public investment, and community-facing delivery."
@@ -867,10 +1139,10 @@ export default function HomePage() {
             />
 
             <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              variants={cascadeContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={revealViewport}
               className="grid gap-6"
             >
               {[
@@ -886,14 +1158,15 @@ export default function HomePage() {
                   'Participation and transparency',
                   'Its public-facing mission emphasizes inclusive growth, transparency, and collaboration with communities across the region.',
                 ],
-              ].map(([title, body]) => (
+              ].map(([title, body], index) => (
                 <motion.div
                   key={title}
+                  variants={getCardReveal(index + 60)}
                   whileHover={{ scale: 1.35, zIndex: 30 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative rounded-[2rem] border border-black/10 bg-white/55 p-7"
+                  className="relative rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-white/55 p-7"
                 >
-                  <div className="text-xs uppercase tracking-[0.34em] text-[#716858]">{title}</div>
+                  <div className="text-xs uppercase tracking-[0.34em] text-[var(--ssdc-gold-text)]">{title}</div>
                   <p
                     className="mt-4 text-sm leading-8 text-[#564f44] md:text-base"
                     >
@@ -905,8 +1178,9 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="bg-[#ece3d4] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
-          <div className="mx-auto max-w-7xl">
+        <section className="relative bg-[#ece3d4] px-5 py-20 md:px-8 lg:px-10 lg:py-28">
+          <SectionBackdropTitle text="Institutional Insights" scrollY={scrollY} speed={0.026} align="right" />
+          <div className="relative z-10 mx-auto max-w-7xl">
             <SectionIntro
               label="Institutional insights"
               title="The supporting sections now read like an official commission website rather than a generic landing page."
@@ -918,40 +1192,45 @@ export default function HomePage() {
               {insights.map((item, index) => (
                 <motion.article
                   key={item.title}
-                  initial={{ opacity: 0, y: 32 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.25 }}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: false, amount: 0.25 }}
+                  variants={getCardReveal(index + 70)}
                   transition={{ duration: 0.7, delay: index * 0.08 }}
                   whileHover={{ scale: 1.35, zIndex: 30 }}
-                  className="relative rounded-[2rem] border border-black/10 bg-white/55 p-6"
-                  style={{
-                    transform: `perspective(1400px) rotateX(${mouseY * -3}deg) rotateY(${mouseX * 4}deg)`,
-                  }}
+                  className="relative rounded-[2rem] border border-[color:var(--ssdc-green-line)] bg-white/55 p-6"
                 >
-                  <div className="text-xs uppercase tracking-[0.34em] text-[#7a715f]">{item.tag}</div>
-                  <h3
-                    className="mt-4 text-2xl leading-tight text-[#15130f]"
+                  <div
+                    style={{
+                      transform: `perspective(1400px) rotateX(${mouseY * -3}deg) rotateY(${mouseX * 4}deg)`,
+                    }}
                   >
-                    {item.title}
-                  </h3>
-                  <p className="mt-4 text-sm leading-8 text-[#5d564b]">{item.summary}</p>
+                    <div className="text-xs uppercase tracking-[0.34em] text-[var(--ssdc-gold-text)]">{item.tag}</div>
+                    <h3
+                      className="mt-4 text-2xl leading-tight text-[#15130f]"
+                    >
+                      {item.title}
+                    </h3>
+                    <p className="mt-4 text-sm leading-8 text-[#5d564b]">{item.summary}</p>
+                  </div>
                 </motion.article>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="contact" className="px-5 pb-16 pt-16 md:px-8 lg:px-10 lg:pb-24">
-          <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.4rem] bg-[#161410] p-8 text-[#f5eee3] md:p-10 lg:p-14">
+        <section id="contact" className="relative px-5 pb-16 pt-16 md:px-8 lg:px-10 lg:pb-24">
+          <SectionBackdropTitle text="Contact SSDC" scrollY={scrollY} speed={-0.032} align="right" />
+          <div data-nav-theme="white" className="relative z-10 mx-auto max-w-7xl overflow-hidden rounded-[2.4rem] bg-[var(--ssdc-green)] p-8 text-[#f5eee3] md:p-10 lg:p-14">
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              initial="hidden"
+              whileInView="show"
+              viewport={revealViewport}
+              variants={scrollReveal}
               className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end"
             >
               <div>
-                <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.38em] text-[#cdbfa8]">
+                <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.38em] text-[#f1d78e]">
                   <Waves className="h-4 w-4" />
                   South-South Development Commission
                 </div>
@@ -968,18 +1247,26 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <a
+                <motion.a
                   href="https://southsouthdc.com/"
-                  className="inline-flex items-center justify-center rounded-full bg-[#f4ebde] px-6 py-3 text-sm text-[#171410]"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={scrollReveal}
+                  className="inline-flex items-center justify-center rounded-full bg-[#f4ebde] px-6 py-3 text-sm text-[var(--ssdc-green)]"
                 >
                   Visit official SSDC site
-                </a>
-                <a
+                </motion.a>
+                <motion.a
                   href="#top"
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={revealViewport}
+                  variants={scrollReveal}
                   className="inline-flex items-center justify-center rounded-full border border-white/12 px-6 py-3 text-sm text-[#f5eee3]"
                 >
                   Back to top
-                </a>
+                </motion.a>
               </div>
             </motion.div>
           </div>
