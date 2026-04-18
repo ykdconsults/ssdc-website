@@ -1,4 +1,0 @@
-[build]
-  base    = "ssdc-website/ssdc-animated-website"
-  command = "npm run build"
-  publish = "out"
